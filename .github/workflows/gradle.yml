@@ -21,21 +21,39 @@ jobs:
 
     - name: Build with Gradle Wrapper
       run: chmod +x ./gradlew; ./gradlew build
-      
-    - name: Publish to server
-      uses: appleboy/scp-action@master
-      with:
-        host: 188.245.157.167
-        username: root
-        password: totonono
-        source: "build/libs/demo-0.0.1-SNAPSHOT.jar"
-        target: /home/maud/
 
-    - name: Restart app in server
-      uses: appleboy/scp-action@master
+    - name: Upload artifact (JAR file)
+      uses: actions/upload-artifact@v4
       with:
-        host: 188.245.157.167
-        username: root
-        password: totonono
-        command_timeout: 30m
-        script: sudo systemctl restart maud.service
+        name: demo-jar
+        path: build/libs/demo-0.0.1-SNAPSHOT.jar
+
+  deploy:
+      runs-on: ubuntu-latest
+      needs: build
+      permissions:
+        contents: read
+        
+      steps:
+      - name: Download artifact (JAR file)
+        uses: actions/download-artifact@v4
+        with:
+          name: demo-jar
+      
+      - name: Publish to server
+        uses: appleboy/scp-action@master
+        with:
+          host: 188.245.157.167
+          username: root
+          password: totonono
+          source: "build/libs/demo-0.0.1-SNAPSHOT.jar"
+          target: /home/maud/
+
+      - name: Restart app in server
+        uses: appleboy/scp-action@master
+        with:
+          host: 188.245.157.167
+          username: root
+          password: totonono
+          command_timeout: 30m
+          script: sudo systemctl restart maud.service
